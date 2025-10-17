@@ -17,7 +17,7 @@ pip install requests pydub faster-whisper tqdm torch
 
 ## Python script to extract audio and perform TTS for each slide
 
-The Python script [sttvln.py](sttvln.py) does the following:
+The Python script [vlswhisper.py](vlswhisper.py) does the following:
 - input parameter is a slug and optionally a language (only `en` is supported, because you can use model for all languages or English-optimized model);
 - script opens VLN website and detects the location and S3 parameters of MP4 video;
 - video is downloaded;
@@ -55,7 +55,7 @@ OUTPUT_DIR = None           # default: slug name
 
 ## Running the script
 
-How to run: `python3 sttvln.py lawandethics2017_kovacic_kosmerlj_anonymisation en`:
+How to run: `python3 vlswhisper.py lawandethics2017_kovacic_kosmerlj_anonymisation en`:
 
 ```
 No GPU detected, using CPU
@@ -110,7 +110,7 @@ Slides: 100%|██████████████████████�
 Pipeline complete! All files saved in: lawandethics2017_kovacic_kosmerlj_anonymisation
 ```
 
-Or without slides - `python3 sttvln.py eccs07_noble_psb en`:
+Or without slides - `python3 vlswhisper.py eccs07_noble_psb en`:
 
 ```
 No GPU detected, using CPU
@@ -128,13 +128,14 @@ Slides: 100%|██████████████████████�
 Pipeline complete! All files saved in: eccs07_noble_psb
 ```
 
-Example of lecture in slovenian language (without `en` parameter) - `python3 sttvln.py daninfovarnosti2017_kovacic_mobilne_komunikacije`:
-
-```
-```
+Example for lecture in slovenian language (without `en` parameter) - `python3 vlswhisper.py daninfovarnosti2017_kovacic_mobilne_komunikacije`.
 
 ## Wikifier concepts
 
 Example for lecture [Anonymisation of judicial decisions with machine learning](https://videolectures.net/videos/lawandethics2017_kovacic_kosmerlj_anonymisation), slide `Features - basic` at `05:29`.
 
 <img width="1157" height="708" alt="image" src="https://github.com/user-attachments/assets/75b4c9cb-8b5a-4dfa-a385-62e8adc8a7fc" />
+
+Example for lecture [Varnost mobilnih komunikacij](https://videolectures.net/videos/daninfovarnosti2017_kovacic_mobilne_komunikacije), slide `CallerID spoofing - 1` at `01:08`. Transcription was done with medium `model`, but it is not very accurate, however concepts are detected quite well.   
+
+<img width="1148" height="545" alt="image" src="https://github.com/user-attachments/assets/a27e0037-447c-40b1-8705-7b99e0bddc01" />
