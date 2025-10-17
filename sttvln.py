@@ -1,96 +1,152 @@
+#!/usr/bin/env python3
 import os
 import sys
-import re
-import html
+import json
 import requests
 import subprocess
-import torch
+from pathlib import Path
+from tqdm import tqdm
 from faster_whisper import WhisperModel
 
-def process_video(slug):
-    base_url = "https://videolectures.net/videos/"
-    page_url = f"{base_url}{slug}"
-    print(f"[INFO] Fetching page: {page_url}")
+# ---------------- CONFIG SECTION ----------------
+SLICE_PADDING = 1000        # milliseconds before/after slide
+DELETE_MP4 = True           # delete MP4 after extraction
+DELETE_WAV = True           # delete WAV after slicing
+WHISPER_MODEL = "small"     # faster-whisper model
+OUTPUT_DIR = None           # default: slug name
+# ------------------------------------------------
 
-    # --- Step 1: Fetch page and extract MP4 link ---
-    response = requests.get(page_url)
-    if response.status_code != 200:
-        raise Exception(f"Failed to open {page_url} (status {response.status_code})")
+# ---------------- Parse Arguments ----------------
+if len(sys.argv) < 2:
+    print("Usage: python3 sttvln.py <slug> [language]")
+    sys.exit(1)
 
-    match = re.search(r'https://[^\s"]+\.mp4\?[^"\s]+', response.text)
-    if match:
-        mp4_url = html.unescape(match.group(0))
-    else:
-        raise Exception("MP4 link not found on the page.")
+slug = sys.argv[1]
+language = sys.argv[2] if len(sys.argv) > 2 else None
 
-    print(f"[INFO] Found MP4 URL: {mp4_url[:80]}...")
+output_dir = Path(OUTPUT_DIR or slug)
+output_dir.mkdir(exist_ok=True)
 
-    # --- Step 2: Download MP4 ---
-    mp4_filename = f"{slug}.mp4"
-    print(f"[INFO] Downloading video -> {mp4_filename}")
-    with requests.get(mp4_url, stream=True) as r:
-        r.raise_for_status()
-        with open(mp4_filename, "wb") as f:
-            for chunk in r.iter_content(chunk_size=8192):
-                f.write(chunk)
-    print(f"[INFO] Download complete: {mp4_filename}")
-
-    # --- Step 3: Extract audio with ffmpeg ---
-    wav_filename = f"{slug}.wav"
-    ffmpeg_cmd = [
-        "ffmpeg", "-i", mp4_filename,
-        "-vn", "-acodec", "pcm_s16le",
-        "-ar", "44100", "-ac", "2", wav_filename, "-y"
-    ]
-    print(f"[INFO] Extracting audio -> {wav_filename}")
-    subprocess.run(ffmpeg_cmd, check=True)
-    print(f"[INFO] Audio extraction complete")
-
-    # --- Step 4: (Optional) Delete MP4 ---
-    # os.remove(mp4_filename)
-
-    # --- Step 5: Run Whisper directly in Python ---
-    print("[INFO] Running Whisper transcription via faster-whisper...")
-
-    # Detect device automatically
+# ---------------- Detect CPU/GPU ----------------
+try:
+    import torch
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    print(f"[INFO] Using device: {device}")
+except ImportError:
+    device = "cpu"
+print(f"No GPU detected, using CPU" if device=="cpu" else f"GPU detected, using CUDA")
 
-    model_size = "medium"  # choose small, medium, or large
-    model = WhisperModel(model_size, device=device)
+# ---------------- Download Video ----------------
+video_page_url = f"https://videolectures.net/videos/{slug}"
+print(f"Opening video page: {video_page_url}")
 
-    segments, info = model.transcribe(wav_filename, language="en")
+json_url = f"https://backend.videolectures.net/api/v2/videos/slug/{slug}"
+print(f"Fetching metadata: {json_url}")
+resp = requests.get(json_url)
+resp.raise_for_status()
+metadata = resp.json()
 
-    srt_filename = f"{slug}.srt"
-    with open(srt_filename, "w", encoding="utf-8") as srt_file:
-        for i, segment in enumerate(segments, start=1):
-            start = segment.start
-            end = segment.end
-            text = segment.text.strip()
+# Get first part's video URL
+parts = metadata.get("parts", [])
+if not parts:
+    raise ValueError("No video parts found in metadata!")
 
-            def format_time(seconds):
-                h = int(seconds // 3600)
-                m = int((seconds % 3600) // 60)
-                s = int(seconds % 60)
-                ms = int((seconds - int(seconds)) * 1000)
-                return f"{h:02}:{m:02}:{s:02},{ms:03}"
+video_url = parts[0].get("video_url")
+if not video_url:
+    raise ValueError("Video URL not found!")
 
-            srt_file.write(f"{i}\n")
-            srt_file.write(f"{format_time(start)} --> {format_time(end)}\n")
-            srt_file.write(f"{text}\n\n")
+video_path = output_dir / f"{slug}.mp4"
+print(f"Downloading video to {video_path} ...")
+with requests.get(video_url, stream=True) as r:
+    r.raise_for_status()
+    total = int(r.headers.get("content-length", 0))
+    with open(video_path, "wb") as f, tqdm(total=total, unit="B", unit_scale=True, desc="Downloading") as pbar:
+        for chunk in r.iter_content(chunk_size=8192):
+            f.write(chunk)
+            pbar.update(len(chunk))
 
-    print(f"[INFO] Whisper transcription complete -> {srt_filename}")
+# ---------------- Extract Audio ----------------
+audio_path = output_dir / f"{slug}.wav"
+print("Extracting audio with ffmpeg ...")
 
-    # --- Step 6: (Optional) Delete WAV ---
-    # os.remove(wav_filename)
+# Get video duration for progress bar
+import math
+def ffmpeg_with_progress(input_file, output_file, extra_args=None):
+    cmd = ["ffmpeg", "-y", "-i", str(input_file)]
+    if extra_args:
+        cmd += extra_args
+    cmd += [str(output_file)]
+    # Use PIPE to suppress ffmpeg console output
+    subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
-    print(f"[DONE] All steps completed successfully for slug: {slug}")
+ffmpeg_with_progress(video_path, audio_path, ["-vn", "-acodec", "pcm_s16le", "-ar", "44100", "-ac", "2"])
 
+if DELETE_MP4:
+    os.remove(video_path)
 
-if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Usage: python3 sttvln.py <slug>")
-        sys.exit(1)
+# ---------------- Prepare Slides ----------------
+slides = []
+presentations = parts[0].get("presentations", [])
+if presentations:
+    for pres in presentations:
+        for slide in pres.get("slides", []):
+            if slide.get("timestamps"):
+                slides.append({
+                    "title": slide.get("title", ""),
+                    "start": slide["timestamps"][0],
+                    "image": slide.get("image", "")
+                })
 
-    slug = sys.argv[1]
-    process_video(slug)
+if slides:
+    # Sort slides by start time
+    slides.sort(key=lambda x: x["start"])
+    # Add start/end padding
+    duration = parts[0]["duration"]
+    for i in range(len(slides)):
+        start = max(0, slides[i]["start"] - SLICE_PADDING/1000)
+        if i < len(slides) - 1:
+            end = slides[i + 1]["start"] + SLICE_PADDING/1000
+        else:
+            end = duration
+        slides[i]["start_pad"] = start
+        slides[i]["end_pad"] = min(end, duration)
+else:
+    print("No slides with timestamps found. Using entire audio as single slice.")
+    slides = [{"title": slug, "start_pad": 0, "end_pad": parts[0]["duration"]}]
+
+# ---------------- Load Whisper Model ----------------
+model_name = WHISPER_MODEL
+if language == "en":
+    model_name += ".en"
+
+print(f"Loading faster-whisper model '{model_name}' on {device} ...")
+model = WhisperModel(model_name, device=device, compute_type="auto")
+
+# ---------------- Transcribe Slides ----------------
+for idx, slide in enumerate(tqdm(slides, desc="Slides", unit="slide")):
+    s_path = output_dir / f"{idx+1:03d}_{slide['title'].replace(' ', '_')}.wav"
+    txt_path = output_dir / f"{idx+1:03d}_{slide['title'].replace(' ', '_')}.txt"
+
+    # Slice audio
+    start_sec = slide["start_pad"]
+    end_sec = slide["end_pad"]
+    ffmpeg_slice_cmd = [
+        "ffmpeg", "-y", "-i", str(audio_path),
+        "-ss", str(start_sec), "-to", str(end_sec),
+        str(s_path)
+    ]
+    subprocess.run(ffmpeg_slice_cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+    # Transcribe with per-slide progress
+    print(f"\nTranscribing slide {idx+1}/{len(slides)}: {slide['title']}")
+    segments, _ = model.transcribe(str(s_path), language=language)
+    with open(txt_path, "w", encoding="utf-8") as f:
+        for segment in tqdm(segments, desc="Writing segments", leave=False):
+            f.write(segment.text.strip() + "\n")
+
+    if DELETE_WAV:
+        os.remove(s_path)
+
+if DELETE_WAV:
+    os.remove(audio_path)
+
+print(f"\nPipeline complete! All files saved in: {output_dir}")
