@@ -19,7 +19,7 @@ OUTPUT_DIR = None           # default: slug name
 
 # ---------------- Parse Arguments ----------------
 if len(sys.argv) < 2:
-    print("Usage: python3 vlswhisper.py <slug> [language]")
+    print("Usage: python3 vlnwhisper.py <slug> [language]")
     sys.exit(1)
 
 slug = sys.argv[1]
