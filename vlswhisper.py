@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import os
+import re
 import sys
 import json
 import requests
@@ -18,7 +19,7 @@ OUTPUT_DIR = None           # default: slug name
 
 # ---------------- Parse Arguments ----------------
 if len(sys.argv) < 2:
-    print("Usage: python3 sttvln.py <slug> [language]")
+    print("Usage: python3 vlswhisper.py <slug> [language]")
     sys.exit(1)
 
 slug = sys.argv[1]
@@ -122,9 +123,14 @@ print(f"Loading faster-whisper model '{model_name}' on {device} ...")
 model = WhisperModel(model_name, device=device, compute_type="auto")
 
 # ---------------- Transcribe Slides ----------------
+def safe_filename(name: str) -> str:
+    # Replace invalid characters with underscores
+    return re.sub(r'[^a-zA-Z0-9_\-]+', '_', name.strip())
+
 for idx, slide in enumerate(tqdm(slides, desc="Slides", unit="slide")):
-    s_path = output_dir / f"{idx+1:03d}_{slide['title'].replace(' ', '_')}.wav"
-    txt_path = output_dir / f"{idx+1:03d}_{slide['title'].replace(' ', '_')}.txt"
+    safe_title = safe_filename(slide["title"])
+    s_path = output_dir / f"{idx+1:03d}_{safe_title}.wav"
+    txt_path = output_dir / f"{idx+1:03d}_{safe_title}.txt"
 
     # Slice audio
     start_sec = slide["start_pad"]
@@ -134,7 +140,11 @@ for idx, slide in enumerate(tqdm(slides, desc="Slides", unit="slide")):
         "-ss", str(start_sec), "-to", str(end_sec),
         str(s_path)
     ]
-    subprocess.run(ffmpeg_slice_cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    try:
+        subprocess.run(ffmpeg_slice_cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except subprocess.CalledProcessError:
+        print(f"FFmpeg failed for slide {idx+1}: {slide['title']}")
+        continue
 
     # Transcribe with per-slide progress
     print(f"\nTranscribing slide {idx+1}/{len(slides)}: {slide['title']}")
