@@ -136,9 +136,13 @@ Example for lecture in slovenian language (without `en` parameter) - `python3 vl
 
 ## Wikifier concepts
 
+### English language example
+
 Example for lecture [Anonymisation of judicial decisions with machine learning](https://videolectures.net/videos/lawandethics2017_kovacic_kosmerlj_anonymisation), slide `Features - basic` at `05:29`.
 
 <img width="1157" height="708" alt="image" src="https://github.com/user-attachments/assets/75b4c9cb-8b5a-4dfa-a385-62e8adc8a7fc" />
+
+### Slovenian language example
 
 Example for lecture [Varnost mobilnih komunikacij](https://videolectures.net/videos/daninfovarnosti2017_kovacic_mobilne_komunikacije), slide `CallerID spoofing - 1` at `01:08`. Transcription was done with medium `model`, but it is not very accurate, however concepts are detected quite well.   
 
