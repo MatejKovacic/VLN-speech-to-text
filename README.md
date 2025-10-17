@@ -38,4 +38,25 @@ The Python script [sttvln.py](sttvln.py) does the following:
 
 This file can be then sent to Wikifier web service, which will automatically extract concepts in a lecture.
 
+Example: `python3 sttvln.py rtk2017_kovacic_mobilni_telefoni`:
+
+```
+[INFO] Fetching page: https://videolectures.net/videos/rtk2017_kovacic_mobilni_telefoni
+[INFO] Found MP4 URL: https://apiminio.videolectures.net/prod-vln/videos/3024/video/rtk2017_kovacic_mo...
+[INFO] Downloading video -> rtk2017_kovacic_mobilni_telefoni.mp4
+[INFO] Download complete: rtk2017_kovacic_mobilni_telefoni.mp4
+[INFO] Extracting audio -> rtk2017_kovacic_mobilni_telefoni.wav
+...
+[INFO] Audio extraction complete
+[INFO] Running Whisper transcription via faster-whisper...
+[INFO] Using device: cpu
+...
+[INFO] Whisper transcription complete -> rtk2017_kovacic_mobilni_telefoni.srt
+[DONE] All steps completed successfully for slug: rtk2017_kovacic_mobilni_telefoni
+```
+
 Since Wikifier has a limitation of input (10.000 characters), you can use [split_srt.py](split_srt.py) script to convert .SRT subtitle file into ~9500-character parts in pure text, that can be uploaded to Wikifier service.
+
+Run `python3 split_srt.py rtk2017_kovacic_mobilni_telefoni.srt`. Text files are saved to `parts'directory, and now you can upload those parts to Wikifier service.
+
+<img width="1150" height="750" alt="image" src="https://github.com/user-attachments/assets/97e8002e-cda5-4284-8880-87e5fb54c775" />
