@@ -1,14 +1,18 @@
-# VLN speech-to-text and concepts extraction
+# Automatic concepts extraction for VLN videos - per slides
 
-*Testing automatic extraction of concepts from VLN videos.*
+*Testing automatic extraction of concepts from lectures published on Videolectures.NET.*
 
-Videolectures.NET has videos accesible via slugs. We want to automatically perform speech-to-text for a given video and extract the concepts that lecture is presenting. And we want to do that *per slides*.
+## Motivation
 
-So for instance, in URL `https://videolectures.net/videos/lawandethics2017_kovacic_kosmerlj_anonymisation`, slug is `lawandethics2017_kovacic_kosmerlj_anonymisation`.
+We want to automatically perform speech-to-text for a given video and extract the concepts that lecture is presenting. And we want to do that *per slides*, so we will have a set of mentioned concepts for **each slide** of a lecture.
+
+## Understanding the slugs
+
+Videolectures.NET has videos accesible via slugs. So for instance, in URL `https://videolectures.net/videos/lawandethics2017_kovacic_kosmerlj_anonymisation`, slug is `lawandethics2017_kovacic_kosmerlj_anonymisation`. This script can automatically extract concepts for a given slug.
 
 ## Prerequisites
 
-Assuming you have Ubuntu/Debian OS.
+We are assuming you have Ubuntu/Debian OS. If not, that is your problem, this script was tested on Linux only.
 
 ```
 sudo apt update && sudo apt install ffmpeg
@@ -139,3 +143,7 @@ Example for lecture [Anonymisation of judicial decisions with machine learning](
 Example for lecture [Varnost mobilnih komunikacij](https://videolectures.net/videos/daninfovarnosti2017_kovacic_mobilne_komunikacije), slide `CallerID spoofing - 1` at `01:08`. Transcription was done with medium `model`, but it is not very accurate, however concepts are detected quite well.   
 
 <img width="1148" height="545" alt="image" src="https://github.com/user-attachments/assets/a27e0037-447c-40b1-8705-7b99e0bddc01" />
+
+## To do
+
+API to Wikifier and automatic extraction of concepts.
