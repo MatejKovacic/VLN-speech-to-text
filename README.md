@@ -17,7 +17,7 @@ pip install requests pydub faster-whisper tqdm torch
 
 ## Python script to extract audio and perform TTS for each slide
 
-The Python script [vlswhisper.py](vlswhisper.py) does the following:
+The Python script [vlnwhisper.py](vlnwhisper.py) does the following:
 - input parameter is a slug and optionally a language (only `en` is supported, because you can use model for all languages or English-optimized model);
 - script opens VLN website and detects the location and S3 parameters of MP4 video;
 - video is downloaded;
@@ -55,7 +55,7 @@ OUTPUT_DIR = None           # default: slug name
 
 ## Running the script
 
-How to run: `python3 vlswhisper.py lawandethics2017_kovacic_kosmerlj_anonymisation en`:
+How to run: `python3 vlnwhisper.py lawandethics2017_kovacic_kosmerlj_anonymisation en`:
 
 ```
 No GPU detected, using CPU
@@ -110,7 +110,7 @@ Slides: 100%|██████████████████████�
 Pipeline complete! All files saved in: lawandethics2017_kovacic_kosmerlj_anonymisation
 ```
 
-Or without slides - `python3 vlswhisper.py eccs07_noble_psb en`:
+Or without slides - `python3 vlnwhisper.py eccs07_noble_psb en`:
 
 ```
 No GPU detected, using CPU
@@ -128,7 +128,7 @@ Slides: 100%|██████████████████████�
 Pipeline complete! All files saved in: eccs07_noble_psb
 ```
 
-Example for lecture in slovenian language (without `en` parameter) - `python3 vlswhisper.py daninfovarnosti2017_kovacic_mobilne_komunikacije`.
+Example for lecture in slovenian language (without `en` parameter) - `python3 vlnwhisper.py daninfovarnosti2017_kovacic_mobilne_komunikacije`.
 
 ## Wikifier concepts
 
