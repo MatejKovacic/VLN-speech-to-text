@@ -29,7 +29,7 @@ The Python script [vlnwhisper.py](vlnwhisper.py) does the following:
 - script downloads JSON file with timing of the slides (if they are no timings present, it assumes there is just one "slide");
 - audio is sliced to slides (+1 second at the beginning and the end by default - see config section)
 - `faster-whisper` (with automatic detection of GPU/CPU) is used to perform speech-to-text for each slide;
-- the result is a series of .TXT file with transcriptions for each slide separately.
+- the result is a series of `.txt` files with transcriptions for each slide separately.
 
 This files can be then sent to Wikifier web service, which will automatically extract concepts mentioned in each slide of a lecture with a given slug.
 
@@ -148,6 +148,65 @@ Example for lecture [Varnost mobilnih komunikacij](https://videolectures.net/vid
 
 <img width="1148" height="545" alt="image" src="https://github.com/user-attachments/assets/a27e0037-447c-40b1-8705-7b99e0bddc01" />
 
+## Automatic extraction of keywords
+
+Now we have a directory (named the same as slug of the lecture), that contains series of `.txt` files with transcriptions for each slide in a lecture. We want to automatically extract keywords for each slide and save the results in JSON file.
+
+First, we need to install Ollama with `mistral` model:
+
+```
+docker run -d -p 11434:11434 --name ollama ollama/ollama
+docker exec -it ollama ollama pull mistral
+```
+
+Ten we run [extract_keywords.py](extract_keywords.py) script - parameter is slug/directory:
+```
+python extract_keywords.py daninfovarnosti2017_kovacic_mobilne_komunikacije
+```
+
+Result is a JSON file with keywords, saved to the target directory in a file `keywords.json` (for example: `daninfovarnosti2017_kovacic_mobilne_komunikacije/keywords.json`). If there are some errors, they can be checked in raw responses from Ollama LLM, stored in a `.log` file.
+
+### Example oputput (for lecture in Slovenian language)
+
+```
+Processing directory: daninfovarnosti2017_kovacic_mobilne_komunikacije
+Logging raw model responses to: daninfovarnosti2017_kovacic_mobilne_komunikacije/ollama_raw_20251019_200041.log
+
+Processing: 001_Mobile_communications_security.txt
+001_Mobile_communications_security: ['security', 'mobile communication', 'presentation', 'safety', 'attacks', 'cybercrime', 'hacking', 'groups', 'individuals', 'Slovenian']
+
+Processing: 002_Part_1_Identity_spoofing.txt
+002_Part_1_Identity_spoofing: ['IdentiteReplication', 'Semesniki', 'TelefonCall', 'Problem']
+
+Processing: 003_CallerID_spoofing_-_1.txt
+003_CallerID_spoofing_-_1: ['Mi', 'ko', 'telefon', 'zazvoni', 'številka', 'imenik', 'Janez', 'kriptografski', 'mehanizmov', 'avtenticaja', 'primeri', 'poslanke', 'mobilnem', 'telekomunikacija', 'strokunjake', 'software', '3X box', 'virtual', 'VPN', 'drugi', 'pritokodni', 'tih', 'softweri', 'internet', 'programski', 'aplikacija', 'pokličete', 'številka', 'centrale']
+
+Processing: 004_CallerID_spoofing_-_2.txt
+004_CallerID_spoofing_-_2: ['Swotting', 'Call', 'False', 'Number', 'Operator', 'Mobile', 'Telephone', 'Police', '911', 'Prank', 'Night', 'Stalce', 'Grozhna', 'Police Forces']
+
+...
+
+Processing: 024_Questions_.txt
+024_Questions_: ['mobile phone', 'communication', 'threats', 'examples', 'wireless', 'safety', 'assumptions', 'numbers', 'awareness']
+```
+
+### Example oputput (for lecture in English language)
+
+```
+Processing directory: licsb08_santos_pam
+Logging raw model responses to: licsb08_santos_pam/ollama_raw_20251019_200956.log
+
+Processing: 001_licsb08_santos_pam.txt
+001_licsb08_santos_pam: ['Machine Learning', 'Anti-Cancer', 'Compound Prediction', 'Cancer Cell Line', 'Tumor Cell Line', 'Dataset', 'National Cancer Institute', 'Fragment Counts', 'Molecular Weight', 'Octanol Water Coefficient', 'Decision Trees', 'ILP', 'Support Vector Machines', 'Drug Design', 'SVM Model', 'Rules Generation', 'ILP System.']
+
+Keywords JSON saved to: licsb08_santos_pam/keywords.json
+Raw responses logged in: licsb08_santos_pam/ollama_raw_20251019_200956.log
+```
+
 ## To do
 
 API to Wikifier and automatic extraction of concepts.
+
+# Please note
+
+This is a quick proof of concept. Better results could be obtained with GPU-enabled machine. Fine tuning is also needed. 
