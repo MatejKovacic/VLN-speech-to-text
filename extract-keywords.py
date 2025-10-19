@@ -30,8 +30,6 @@ def extract_keywords(text: str, model: str = MODEL, log_file: Path = None, file_
     prompt = (
         "Extract the 3-10 most relevant keywords from the following text. "
         "Return ONLY a comma-separated list of keywords. "
-        "Skip stop words, numbers and general words. "
-        "Preferred keywords are Wikipedia concepts. "
         "If text is not in English, return keywords in English. "
         "Do not use numbered lists, explanations, or JSON.\n\n"
         f"Text:\n{text}"
