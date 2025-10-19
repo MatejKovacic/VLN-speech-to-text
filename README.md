@@ -166,7 +166,7 @@ python extract_keywords.py daninfovarnosti2017_kovacic_mobilne_komunikacije
 
 Result is a JSON file with keywords, saved to the target directory in a file `keywords.json` (for example: `daninfovarnosti2017_kovacic_mobilne_komunikacije/keywords.json`). If there are some errors, they can be checked in raw responses from Ollama LLM, stored in a `.log` file.
 
-### Example oputput (for lecture in Slovenian language)
+### Two example oputputs (for two lectures in Slovenian language)
 
 ```
 Processing directory: daninfovarnosti2017_kovacic_mobilne_komunikacije
@@ -189,6 +189,7 @@ Processing: 004_CallerID_spoofing_-_2.txt
 Processing: 024_Questions_.txt
 024_Questions_: ['mobile phone', 'communication', 'threats', 'examples', 'wireless', 'safety', 'assumptions', 'numbers', 'awareness']
 ```
+<img width="705" height="594" alt="image" src="https://github.com/user-attachments/assets/3849a113-17d6-4f97-9bb3-b500f0ad8d55" />
 
 ### Example oputput (for lecture in English language)
 
@@ -201,6 +202,32 @@ Processing: 001_licsb08_santos_pam.txt
 
 Keywords JSON saved to: licsb08_santos_pam/keywords.json
 Raw responses logged in: licsb08_santos_pam/ollama_raw_20251019_200956.log
+```
+JSON file:
+```
+{
+  "licsb08_santos_pam": {
+    "001_licsb08_santos_pam": [
+      "Machine Learning",
+      "Anti-Cancer",
+      "Compound Prediction",
+      "Cancer Cell Line",
+      "Tumor Cell Line",
+      "Dataset",
+      "National Cancer Institute",
+      "Fragment Counts",
+      "Molecular Weight",
+      "Octanol Water Coefficient",
+      "Decision Trees",
+      "ILP",
+      "Support Vector Machines",
+      "Drug Design",
+      "SVM Model",
+      "Rules Generation",
+      "ILP System."
+    ]
+  }
+}
 ```
 
 ## To do
